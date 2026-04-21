@@ -154,6 +154,21 @@ body{background:#000;overflow:hidden;display:flex;align-items:center;justify-con
 <div id="end"><h2 id="end-h2"></h2><div class="end-stat" id="end-stat"></div><p id="end-sub"></p><button id="end-restart" onclick="restartGame()">walk again →</button></div>
 
 <script>
+// roundRect polyfill for Safari < 15.4 and Chrome < 99
+(function(){
+  const proto=CanvasRenderingContext2D.prototype;
+  if(proto.roundRect)return;
+  proto.roundRect=function(x,y,w,h,r){
+    if(typeof r==='object')r=r[0]||0;r=Math.min(r,w/2,h/2);
+    this.beginPath();
+    this.moveTo(x+r,y);
+    this.lineTo(x+w-r,y);this.arcTo(x+w,y,x+w,y+r,r);
+    this.lineTo(x+w,y+h-r);this.arcTo(x+w,y+h,x+w-r,y+h,r);
+    this.lineTo(x+r,y+h);this.arcTo(x,y+h,x,y+h-r,r);
+    this.lineTo(x,y+r);this.arcTo(x,y,x+r,y,r);
+    this.closePath();
+  };
+})();
 // ═══ CANVAS ══════════════════════════════════════════════
 const GW=480,GH=270;
 const C=document.getElementById('c');
@@ -2467,7 +2482,7 @@ function update(t){
   }
 
   // Fallback end trigger in case player reaches zone 6 without exhaling
-  if(player.wx>7350&&player.presence>0.6&&!endTriggered&&!lostFocus)triggerEnd();
+  if(player.wx>(7350*WS)|0&&player.presence>0.6&&!endTriggered&&!lostFocus)triggerEnd();
 
   // Spring camera — cinematic weight
   if(!endTriggered&&!lostFocus){
@@ -2805,14 +2820,14 @@ function restartGame(){
   crystalsGot=0;notifsDissolved=0;
   // Reset milestones + flags
   MILESTONE_REACHED[0]=false;MILESTONE_REACHED[1]=false;MILESTONE_REACHED[2]=false;
-  fullPresenceTriggered=false;hitFlashTimer=0;
+  fullPresenceTriggered=false;hitFlashTimer=0;superCooldown=0;crystalQuoteIdx=0;
   screenFlash=0;flashCol='#FFF';hitShake=0;shakeX=0;shakeY=0;
   // Clear entities
   notifs.length=0;notifTimer=0;
   scrollFogs.length=0;fogTimer=0;
   thoughtClouds.length=0;thoughtTimer=0;
   ambient.length=0;ambTimer=0;
-  parts.length=0;ripples.length=0;wordFloats.length=0;exhaleSmoke.length=0;
+  parts.length=0;ripples.length=0;wordFloats.length=0;exhaleSmoke.length=0;rainDrops.length=0;splashes.length=0;
   platforms.forEach(pl=>{pl.onTimer=0;});
   // Reset crystals / medit spots to uncollected
   crystals.forEach(c=>{c.collected=false;c.popAnim=0;});
